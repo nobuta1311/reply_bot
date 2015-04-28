@@ -9,10 +9,7 @@ while(true){
 	$minutes = date("i");
 	$second = date("s");
 	
-	if($second==0 && $minutes%3==0){
-		exec("php -c '' 'reply.php' > /dev/null &");
-		sleep(1);
-	}
-
+	exec("php -c '' 'reply.php' > /dev/null &");
+	sleep(60*3);
 }
 ?>
