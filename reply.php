@@ -5,6 +5,7 @@ require"keys.php";
 require"method_home.php";	
 require"sign.php";
 require"method_tweet.php";
+require"japanese.php";
 date_default_timezone_set('Asia/Tokyo');
 
 $link = mysql_connect('localhost','phptest','yuji2943');//データベース接続
@@ -32,14 +33,25 @@ for ($i = 0; $i < 20; $i++) {
 			$result_meaning = $row['meaning'];
 			$result_phase = $row['phase'];
 			if(stristr($temp,$result_word)!=false || stristr($temp,$result_meaning)!=false){	//単語辞書と合致
+				$detauk = "";
+				$detail = IntoJapanese($result_word);
 				mysql_query($query);
 				$query = "select max(day) from past_words where user=\"".$array_home[$i]["user"]["screen_name"]."\" and word=\"".$result_word."\"";
+	//			echo $query;
 				$row = mysql_fetch_assoc(mysql_query($query));
 				$result_day = $row['max(day)'];
-				$tweetstr ="@".$array_home[$i]["user"]["screen_name"]."\n".$result_phase.": ".$result_word."  ".$result_meaning."\nhttp://www.merriam-webster.com/dictionary/".$result_word;	
-				if(($result_day>date("z")|| date("z")-$result_day>30) || $result_day==null){	//30日以内に反応していない
-					echo "tweet!".$tweetstr;
-					echo $result_day."日につぶやいた過去がある";
+	//			echo "\n".$result_day;
+				$tweetstr ="@".$array_home[$i]["user"]["screen_name"]." ".$result_phase.": ".$result_word." ".$result_meaning."\n".$detail;
+				/*if(mb_strlen($tweetstr)>140){
+					$tweetstr = mb_substr($tweetstr,0,139);
+				}
+				*/
+				$tweetstr = mb_convert_kana($tweetstr,"a");
+	//			echo $tweetstr;
+				if(($result_day>date("z")|| date("z")-$result_day>30) || $result_day==null){	//30日以内に反応していないa
+	//				echo $result_day."\n";
+	//				echo "tweet!".$tweetstr;
+	//				echo $result_day."日につぶやいた過去がある";
 					tweet($tweetstr,$reply_to);
 				}
 				$query = "insert into past_words values(\"".$array_home[$i]["user"]["screen_name"]."\",\"".$result_word."\",".date("z").")";
