@@ -29,17 +29,16 @@ for ($i = 0; $i < 20; $i++) {
 			$result_phase = $row['phase'];
 			if(stristr($user_text,$result_word)!=false || stristr($user_text,$result_meaning)!=false){	//単語辞書と合致
 				$detail = "";
-				$detail = IntoJapanese($result_word);
-				mysql_query($query);
+				$detail = IntoJapanese($result_word);		//単語の説明をデ辞蔵から取得
 				$query = "select max(day) from past_words where user=\"".$user_name."\" and word=\"".$result_word."\"";
-				$row = mysql_fetch_assoc(mysql_query($query));
+				$row = mysql_fetch_assoc(mysql_query($query));	//過去のツイートを検索
 				$result_day = $row['max(day)'];
-				$tweetstr ="@".$user_name." ".$result_phase.": ".$result_word." ".$result_meaning."\n".$detail;
+				$tweetstr ="@".$user_name." ".$result_phase.": ".$result_word." ".$result_meaning."\n".$detail;	//ツイート内容
 				/*if(mb_strlen($tweetstr)>140){
 					$tweetstr = mb_substr($tweetstr,0,139);
 				}
 				*/
-				$tweetstr = mb_convert_kana($tweetstr,"a");
+				$tweetstr = mb_convert_kana($tweetstr,"a"); //半角化
 	//			echo $tweetstr;
 				if(($result_day>date("z")|| date("z")-$result_day>30) || $result_day==null){	//30日以内に反応していない
 					tweet($tweetstr,$reply_to);
