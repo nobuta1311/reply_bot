@@ -40,7 +40,7 @@ for ($i = 0; $i < 20; $i++) {
 				*/
 				$tweetstr = mb_convert_kana($tweetstr,"a"); //半角化
 	//			echo $tweetstr;
-				if(($result_day>date("z")|| date("z")-$result_day>30) || $result_day==null){	//30日以内に反応していない
+				if($result_day==null){	//30日以内に反応していない
 					tweet($tweetstr,$reply_to);
 				}
 				$query = "insert into past_words values(\"".$user_name."\",\"".$result_word."\",".date("z").")";
