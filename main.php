@@ -58,11 +58,9 @@ function word_check($user_name,$user_text,$reply_to){
 				$result_day = $row['max(day)']; 
 				$tweetstr =$result_phase.": ".$result_word." ".$result_meaning."\n".$detail;	//ツイート内容構成
 				$tweetstr = mb_convert_kana("@".$user_name." ".$tweetstr."\n","a",'UTF-8'); //半角化
-                                //echo $tweetstr;
                                 //ツイートすべきかどうかの判断
-                                //echo $num."\n";
 				if($result_day==NULL||date("z")-$result_day>40 || (date("z")-$result_day<0 && (366-$result_day)+("z")>40)){	
-                                        //過去40日に反応していないならば、得点の対象となる
+                                        //過去40日に出現していないならば、得点の対象となる
                                         $query = "select word, count(word) from past_words where word=\"".$result_word."\" group by word"; //出現回数
                                         $row = mysql_fetch_assoc(mysql_query($query));
                                         if($num<4000){  //a単語ならば10点満点
@@ -90,39 +88,25 @@ function word_check($user_name,$user_text,$reply_to){
                                         }
                                         mysql_query($query);
 				}
-				$query = "insert into past_words values(\"".$user_name."\",\"".$result_word."\",".date("z").")";
-                                        //過去単語を更新
+				$query = "insert into past_words values(\"".$user_name."\",\"".$result_word."\",".date("z").")";        //過去単語を更新
 				mysql_query($query);
         		}
                 }               
-	
 }
 $link = mysql_connect('localhost',$mysql_user,$mysql_pass);//データベース接続
-$db_selected = mysql_select_db('phptest',$link);
-$array_home = home_timeline(20);
-$newest = file_get_contents("log.txt");
-file_put_contents("log.txt",$array_home[0]["id"]);
-
+$db_selected = mysql_select_db('phptest',$link);        //データベース選択
+$array_home = home_timeline(20);                        //ホームタイムライン20取得
+$newest = file_get_contents("log.txt");                 //今回の下限ツイートを取得
+file_put_contents("log.txt",$array_home[0]["id"]);      //次回のツイート下限を設定
 for ($i = 0; $i < 30; $i++) {           //１分間に30ツイートを想定
         sleep(1);
-	if(empty($array_home[$i])){			//取得できているかチェック
-		continue;
-	}
-        if($array_home[$i]["id"]==$newest){     //前回チェックしたところに到着->break
-              break;
-        }
-	$reply_to = $array_home[$i]["id"];
-	$user_name = $array_home[$i]["user"]["screen_name"];	//reply_to $user_name $user_text
-        $user_text = $array_home[$i]["text"];
-        //ここから点数照会ゾーン
-        if(stristr($user_text,"@BotOfNobuta")){refer($user_name,$user_text);}
-        echo $user_text;
-
-        //ここから、単語の照会をはじめる
-        if($user_name!="BotOfNobuta" && $array_home[$i]["retweeted_status"]==null){word_check($user_name,$user_text,$reply_to);}
+	if(empty($array_home[$i])){continue;}   //取得エラーなら処理しない
+        if($array_home[$i]["id"]==$newest){break;}    //前回チェックしたところに到着->break
+	$reply_to = $array_home[$i]["id"];$user_name = $array_home[$i]["user"]["screen_name"]; $user_text = $array_home[$i]["text"];//変数名前変更
+        if(stristr($user_text,"@BotOfNobuta")){refer($user_name,$user_text);}   //現時点の点数照会
+        if($user_name!="BotOfNobuta" && $array_home[$i]["retweeted_status"]==null){word_check($user_name,$user_text,$reply_to);}//単語照会
 }
-if(date("i")%20==0){a_word();}              //hours実行
-if(date("G")==0 && date("i")==0 ){ranking();}
-//hours();
+if(date("i")%20==0){a_word();}              //20分ごとのa単語のチェック
+if(date("G")==0 && date("i")==0 ){ranking();}   //ランキングの発表
 mysql_close($link);	//データベース閉じる
 ?>
