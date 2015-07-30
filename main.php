@@ -27,13 +27,13 @@ function ranking(){//ランキング照会関数
         }
         print_r (update($tweetstr,""));
 }
-function refer($user_name,$user_text){  //点数照会関数
-                $query = "select point from point_word where user=\"".$user_name."\"";
+function refer($user_name,$user_text,$reply_to){  //点数照会関数
+                $query = "select point from point_word where user=\"".$user_name."\"";  //ポイント取得
                 $row = mysql_fetch_assoc(mysql_query($query));
-                $query_new = "select tempstr from point_word where user=\"".$user_name."\"";
+                $query_new = "select tempstr from point_word where user=\"".$user_name."\"";//tempstr取得
                 $isnew = mysql_fetch_assoc(mysql_query($query_new));
-                if($row==false){$current_point = 0;}else{$current_point = $row["point"];}
-                if($isnew["tempstr"][0]!="."){      
+                if($row==false){$current_point = 0;}else{$current_point = $row["point"];}   //もし今のポイントが0なら0
+                if($isnew["tempstr"][0]!="."){                  //最近照会したなら実行しない
                         //echo mb_substr($isnew["tempstr"],0,1,"UTF-8");
                         update("@".$user_name. " あなたの現在の点数は".$current_point."です",$reply_to);
                         $query_mark = "update point_word set tempstr = concat(\".\",tempstr) where user = \"".$user_name."\"";
@@ -103,7 +103,7 @@ for ($i = 0; $i < 30; $i++) {           //１分間に30ツイートを想定
 	if(empty($array_home[$i])){continue;}   //取得エラーなら処理しない
         if($array_home[$i]["id"]==$newest){break;}    //前回チェックしたところに到着->break
 	$reply_to = $array_home[$i]["id"];$user_name = $array_home[$i]["user"]["screen_name"]; $user_text = $array_home[$i]["text"];//変数名前変更
-        if(stristr($user_text,"@BotOfNobuta")){refer($user_name,$user_text);}   //現時点の点数照会
+        if(stristr($user_text,"@BotOfNobuta")){refer($user_name,$user_text,$reply_to);}   //現時点の点数照会
         if($user_name!="BotOfNobuta" && $array_home[$i]["retweeted_status"]==null){word_check($user_name,$user_text,$reply_to);}//単語照会
 }
 if(date("i")%20==0){a_word();}              //20分ごとのa単語のチェック
