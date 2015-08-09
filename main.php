@@ -76,7 +76,11 @@ function word_check($user_name,$user_text,$reply_to){
                                                 $tweetstr = ".".$tweetstr." ".$tinyurl." ";
                                                 if($row["count(word)"]==0){$point=100;}else{$point = round(100/($row["count(word)"]+1),2);}  
                                                 //新たな単語は100ポイントで他のは100/回数+1
-					        update($tweetstr.$point."pt",$reply_to);
+                                                $result_exec = exec("php makeimage.php ".$result_phase);
+					        //if($result_exec=="0"){
+                                                //upload($tweetstr.$point."pt","./result.png",$reply_to);
+                                                //}else{
+                                                update($tweetstr.$point."pt",$reply_to);
                                         }
                                         //ポイントデータの処理    ユーザにデータベース造られているかどうか
                                         $query = "select point from point_word where user=\"".$user_name."\"";
@@ -91,7 +95,7 @@ function word_check($user_name,$user_text,$reply_to){
 				$query = "insert into past_words values(\"".$user_name."\",\"".$result_word."\",".date("z").")";        //過去単語を更新
 				mysql_query($query);
         		}
-                }               
+              }
 }
 $link = mysql_connect('localhost',$mysql_user,$mysql_pass);//データベース接続
 $db_selected = mysql_select_db('phptest',$link);        //データベース選択
