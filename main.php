@@ -30,10 +30,13 @@ function ranking(){//ランキング照会関数
 }
 function refer($user_name,$user_text,$reply_to){  //点数照会関数
                 $query_refer = "select point from point_word where user=\"".$user_name."\"";  //ポイント取得
-                $row_refer = mysql_fetch_assoc(mysql_query($query_refer));
                 $query_new = "select tempstr from point_word where user=\"".$user_name."\"";//tempstr取得
                 $isnew = mysql_fetch_assoc(mysql_query($query_new));
-                if($row_refer==false){$current_point = 0;}else{$current_point = $row_refer["point"];}   //もし今のポイントが0なら0
+                if($row_refer = mysql_fetch_assoc(mysql_query($query_refer))){
+                        $current_point = $row_refer["point"];   //既存ポイントがあればその値
+                        }else{
+                        $current_point=0;                       //ポイントがなければ0
+                        }
                 if($isnew["tempstr"][0]!="."){                  //最近照会したなら実行しない
                         //echo mb_substr($isnew["tempstr"],0,1,"UTF-8");
                         update("@".$user_name. " あなたの現在の点数は".$current_point."です",$reply_to);
@@ -56,8 +59,8 @@ function word_check($user_name,$user_text,$reply_to,$fp){
 				$detail = "";
 				$detail = IntoJapanese($result_word);		//単語の説明をデ辞蔵から取得
                                 //最近ツイートされてないかを調べる
-				$query = "select max(day) from past_words where word=\"".$result_word."\"";
-				$row = mysql_fetch_assoc(mysql_query($query));	//過去のツイートを検索
+				$query_maxday = "select max(day) from past_words where word=\"".$result_word."\"";
+				$row = mysql_fetch_assoc(mysql_query($query_maxday));	//過去のツイートを検索
 				$result_day = $row['max(day)']; 
 				$tweetstr =$result_phase.": ".$result_word." ".$result_meaning."\n".$detail;	//ツイート内容構成
 				$tweetstr = mb_convert_kana("@".$user_name." ".$tweetstr."\n","a",'UTF-8'); //半角化
@@ -96,14 +99,14 @@ function word_check($user_name,$user_text,$reply_to,$fp){
                                                 //update($tweetstr.$point."pt",$reply_to);
                                         }
                                         //ポイントデータの処理    ユーザにデータベース造られているかどうか
-                                        $query = "select point from point_word where user=\"".$user_name."\"";
-                                        $row = mysql_fetch_assoc(mysql_query($query));
-                                        if($row==false){        //既存のレコードがないならばレコード挿入
-                                                $query_point = "insert into point_word value(\"".$user_name."\",".$point.",\"\")";
-                                                fwrite($fp,"レコード作成");
-                                        }else{                  //既にレコードがあるならばレコード更新
+                                        $query_current_point = "select point from point_word where user=\"".$user_name."\"";
+                                        if($result_current= mysql_fetch_assoc(mysql_query($query_current_point))){
                                                 $query_point = "UPDATE point_word SET point = point+".$point." WHERE user =\"".$user_name."\"";
                                                 fwrite($fp,$point."ポイント追加");
+
+                                        }else{
+                                                $query_point = "insert into point_word value(\"".$user_name."\",".$point.",\"\")";
+                                                fwrite($fp,"レコード作成");
                                         }
                                         mysql_query($query_point);
 				}else{fwrite($fp,$result_day."にあらわれているので得点対象外");}
