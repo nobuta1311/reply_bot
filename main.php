@@ -4,7 +4,6 @@ require "Methods.php";
 require "japanese.php";
 require "mysql_key.php";
 require "../shorter.php";
-require "makeimage.php";
 date_default_timezone_set('Asia/Tokyo');
 //20分ごとに蓄積されたa単語を出力してデータベースをお掃除する関数hours
 function a_word(){       //20分ごとのまとめツイート
@@ -68,7 +67,7 @@ function word_check($user_name,$user_text,$reply_to,$fp){
                                 $query_count_appere = "select word, count(word) from past_words where word=\"".$result_word."\" group by word"; //出現回数取得
                                 $row = mysql_fetch_assoc(mysql_query($query_count_appere));
                                 $query_insert = "insert into past_words values(\"".$user_name."\",\"".$result_word."\",".date("z").")";        //過去単語を更新
-                                fwrite($fp,"発見済み単語に記録\n".$query_insert."\n");
+                               // fwrite($fp,"発見済み単語に記録\n".$query_insert."\n");
 				mysql_query($query_insert);
 				if($result_day==NULL||date("z")-$result_day>40 || (date("z")-$result_day<0 && (366-$result_day)+("z")>40)){	
                                         //過去40日に出現していないならば、得点の対象となる
@@ -89,26 +88,32 @@ function word_check($user_name,$user_text,$reply_to,$fp){
                                                 $tweetstr = ".".$tweetstr." ".$tinyurl." ";
                                                 if($row["count(word)"]==0){$point=100;}else{$point = round(100/($row["count(word)"]+1),2);}  
                                                 //新たな単語は100ポイントで他のは100/回数+1
-                                                makepng($result_phase);
+                                             //   makepng($result_phase);
+                                                exec("nohup php makeimage.php ".$result_phase." &");
                                                 fwrite($fp,"画像作成関数実行");
-                                                sleep(10);
+                                                sleep(2);
 					        //if($result_exec=="0"){
-                                                upload($tweetstr.$point."pt","./result.png",$reply_to);
-                                                fwrite($fp,"ツイート送信完了");
+                                              //  upload($tweetstr.$point."pt","./result.png",$reply_to);
                                                 //}else{
-                                                //update($tweetstr.$point."pt",$reply_to);
+                                                update($tweetstr.$point."pt",$reply_to);
+                                                fwrite($fp,"ツイート送信完了");
                                         }
                                         //ポイントデータの処理    ユーザにデータベース造られているかどうか
-                                        $query_current_point = "select point from point_word where user=\"".$user_name."\"";
-                                        if($result_current= mysql_fetch_assoc(mysql_query($query_current_point))){
-                                                $query_point = "UPDATE point_word SET point = point+".$point." WHERE user =\"".$user_name."\"";
-                                                fwrite($fp,$point."ポイント追加");
+                                        sleep(3);
 
+                                        $query_point = "UPDATE point_word SET point = point+".$point." WHERE user =\"".$user_name."\"";
+                                        fwrite($fp,"\n".$query_point."\n");
+                                        $result_point = mysql_query($query_point);
+                                        fwrite($fp,"ポイント追加できた？".$result_point);
+                                        if($result_point==true){
+                                                //ポイント追加成功
+                                                fwrite($fp,"成功!");               
                                         }else{
-                                                $query_point = "insert into point_word value(\"".$user_name."\",".$point.",\"\")";
-                                                fwrite($fp,"レコード作成");
+                                                //ポイント追加失敗　レコード作成
+                                                $query_addpoint = "insert into point_word value(\"".$user_name."\",".$point.",\"\")";
+                                                mysql_query($query_addpoint);
+                                                fwrite($fp,"失敗レコード作成");
                                         }
-                                        mysql_query($query_point);
 				}else{fwrite($fp,$result_day."にあらわれているので得点対象外");}
 				}
               }
