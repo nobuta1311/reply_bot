@@ -69,7 +69,7 @@ function word_check($user_name,$user_text,$reply_to,$fp){
                                 $query_insert = "insert into past_words values(\"".$user_name."\",\"".$result_word."\",".date("z").")";        //過去単語を更新
                                // fwrite($fp,"発見済み単語に記録\n".$query_insert."\n");
 				mysql_query($query_insert);
-				if($result_day==NULL||date("z")-$result_day>40 || (date("z")-$result_day<0 && (366-$result_day)+("z")>40)){	
+				if($result_day==NULL||date("z")-$result_day>30 || (date("z")-$result_day<0 && (366-$result_day)+("z")>30)){	
                                         //過去40日に出現していないならば、得点の対象となる
                                         if($result_day==NULL){fwrite($fp,"過去に記録がないので得点の対象 ");}else{
                                         fwrite($fp,$result_day."日前に反応したので得点の対象 ");}
@@ -85,34 +85,42 @@ function word_check($user_name,$user_text,$reply_to,$fp){
                                                 fwrite($fp,"b単語");
                                                 $longurl = "http://www.merriam-webster.com/dictionary/".$result_word;
                                                 $tinyurl = get_tiny_url($longurl);
-                                                $tweetstr = ".".$tweetstr." ".$tinyurl." ";
+                                                $length = mb_strlen($tweetstr,'UTF-8');
+                                                if($length<120){
+                                                        $tweetstr = ".".$tweetstr." ".$tinyurl." ";
+                                                }else if($length>134){
+                                                        $tweetstr = mb_substr($tweetstr,0,134,'UTF-8');
+                                                }
                                                 if($row["count(word)"]==0){$point=100;}else{$point = round(100/($row["count(word)"]+1),2);}  
                                                 //新たな単語は100ポイントで他のは100/回数+1
                                              //   makepng($result_phase);
-                                                exec("nohup php makeimage.php ".$result_phase." &");
-                                                fwrite($fp,"画像作成関数実行");
-                                                sleep(2);
 					        //if($result_exec=="0"){
                                               //  upload($tweetstr.$point."pt","./result.png",$reply_to);
                                                 //}else{
                                                 update($tweetstr.$point."pt",$reply_to);
                                                 fwrite($fp,"ツイート送信完了");
+                                                sleep(5);
+                                                exec("nohup php makeimage.php ".$result_phase." &");
+                                                fwrite($fp,"画像作成関数実行");
+
+
                                         }
                                         //ポイントデータの処理    ユーザにデータベース造られているかどうか
                                         sleep(3);
-
-                                        $query_point = "UPDATE point_word SET point = point+".$point." WHERE user =\"".$user_name."\"";
-                                        fwrite($fp,"\n".$query_point."\n");
-                                        $result_point = mysql_query($query_point);
-                                        fwrite($fp,"ポイント追加できた？".$result_point);
-                                        if($result_point==true){
-                                                //ポイント追加成功
-                                                fwrite($fp,"成功!");               
-                                        }else{
+                                        $query_check = "select * from point_word where user=\"".$user_name."\"";
+                                        $result_check = mysql_query($query_check);
+                                        $result_check_empty = mysql_fetch_assoc($result_check);
+                                        if(!$result_check_empty){
                                                 //ポイント追加失敗　レコード作成
-                                                $query_addpoint = "insert into point_word value(\"".$user_name."\",".$point.",\"\")";
+                                                $query_addpoint = "insert into point_word value(\"".$user_name."\",".$point.",\"\",\"\")";
                                                 mysql_query($query_addpoint);
                                                 fwrite($fp,"失敗レコード作成");
+                                        }else{
+                                                $query_point = "UPDATE point_word SET point = point+".$point." WHERE user =\"".$user_name."\"";
+                                                $result_point = mysql_query($query_point);
+                                                fwrite($fp,"\n".$query_point."\n");
+                                                //ポイント追加成功
+                                                fwrite($fp,"成功!");               
                                         }
 				}else{fwrite($fp,$result_day."にあらわれているので得点対象外");}
 				}
@@ -130,8 +138,8 @@ for ($i = 0; $i < 30; $i++) {           //１分間に30ツイートを想定
 	if(empty($array_home[$i])){continue;}   //取得エラーなら処理しない
         if($array_home[$i]["id"]==$newest){break;}    //前回チェックしたところに到着->break
 	$reply_to = $array_home[$i]["id"];$user_name = $array_home[$i]["user"]["screen_name"]; $user_text = $array_home[$i]["text"];//変数名前変更
-        if(stristr($user_text,"@BotOfNobuta")){refer($user_name,$user_text,$reply_to);}   //現時点の点数照会
-        if($user_name!="BotOfNobuta" && $array_home[$i]["retweeted_status"]==null){word_check($user_name,$user_text,$reply_to,$fp);}//単語照会
+        if(stristr($user_text,"@HUSTNWRD")){refer($user_name,$user_text,$reply_to);}   //現時点の点数照会
+        if($user_name!="HUSTNWRD" && $array_home[$i]["retweeted_status"]==null){word_check($user_name,$user_text,$reply_to,$fp);}//単語照会
 }
 if(date("i")%20==0){a_word();}              //20分ごとのa単語のチェック
 if(date("G")==0 && date("i")==0 ){ranking();}   //ランキングの発表
