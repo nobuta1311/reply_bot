@@ -33,6 +33,7 @@ $text .= "\begin{table}
                         }else
                         {
                            // date("z")-$result_day>30 || (date("z")-$result_day<0 && (366-$result_day)+("z")>30)
+                            /*
                                 if(date("z"-$temp["day"]>0))$days=date("z")-$temp["day"];
                                 else $days=366-date("z")+$temp["day"];
                                 if($days<=0)$days=1;
@@ -41,8 +42,10 @@ $text .= "\begin{table}
                                     $text.="";
                                 else
                                     $text.="\cellcolor{color".(1/$days)."} ";
+                             */
+                            $text.="\cellcolor{color".(date("z")-$temp["day"]+1)."}";
                                 $text.=$temp["word"]." ";
-                                }
+                        }
                 }else{  //みつかってなければ
                     echo "sippai";
                 $query_hidden = "select * from words where number=".$number;
