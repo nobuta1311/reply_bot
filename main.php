@@ -1,9 +1,10 @@
 <?php
 //error_reporting(0);	//warningが無限に出るので
-require "Methods.php";
 require "japanese.php";
 require "mysql_key.php";
 require "../shorter.php";
+require "/var/www/html/php/Oauth/Methods.php";
+require "/var/www/html/php/Oauth/keys_tango.php";
 date_default_timezone_set('Asia/Tokyo');
 //20分ごとに蓄積されたa単語を出力してデータベースをお掃除する関数hours
 function a_word(){       //20分ごとのまとめツイート
@@ -54,7 +55,7 @@ function word_check($user_name,$user_text,$reply_to,$fp){
                         //単語の項目と合致した場合!
 			if(stristr($user_text,$result_word)!=false || stristr($user_text,$result_meaning)!=false){
                                 //単語発見
-                                fwrite($fp,"\n".date("r")." ".$result_word." ".$user_name."の".$user_text);
+                                fwrite($fp,"\n".date("m").date("d")." \"".$result_word."\" ".$user_name);
 				$detail = "";
 				$detail = IntoJapanese($result_word);		//単語の説明をデ辞蔵から取得
                                 //最近ツイートされてないかを調べる
@@ -70,11 +71,14 @@ function word_check($user_name,$user_text,$reply_to,$fp){
                                // fwrite($fp,"発見済み単語に記録\n".$query_insert."\n");
 				mysql_query($query_insert);
 				if($result_day==NULL||date("z")-$result_day>30 || (date("z")-$result_day<0 && (366-$result_day)+("z")>30)){	
-                                        //過去40日に出現していないならば、得点の対象となる
-                                        if($result_day==NULL){fwrite($fp,"過去に記録がないので得点の対象 ");}else{
-                                        fwrite($fp,$result_day."日前に反応したので得点の対象 ");}
+                                        //過去30日に出現していないならば、得点の対象となる
+                    if($result_day==NULL){fwrite($fp," 過去に記録がないので得点の対象 ");}
+                    else{
+                        fwrite($fp,"  ".$result_day."日前に反応したので得点の対象 ");
+                    }
+                    fwrite($fp,"\n".$user_text);
                                         if($num<4000){  //a単語ならば10点満点
-                                                fwrite($fp,"a単語");
+                                                fwrite($fp,"\na単語");
                                                 if($row["count(word)"]==0){$point=10;}else{$point = round(10/($row["count(word)"]+1),2);}  
                                                 //新たな単語は10ポイントで他のは10/回数+1
                                                 $query_set = "update point_word set tempstr = concat(tempstr,\" ".$result_word.":".$result_meaning." ".$point."pt \") , reply_to =\"".$reply_to."\" where user = \"".$user_name."\"";
@@ -82,26 +86,26 @@ function word_check($user_name,$user_text,$reply_to,$fp){
                                                 //文字列を蓄える
                                                 mysql_query($query_set);
                                         }else{          //b単語ならば点数100点満点
-                                                fwrite($fp,"b単語");
+                                                fwrite($fp,"\nb単語");
                                                 $longurl = "http://www.merriam-webster.com/dictionary/".$result_word;
                                                 $tinyurl = get_tiny_url($longurl);
                                                 $length = mb_strlen($tweetstr,'UTF-8');
                                                 if($length<120){
-                                                        $tweetstr = ".".$tweetstr." ".$tinyurl." ";
+                                                        $tweetstr = $tweetstr." ".$tinyurl." ";
                                                 }else if($length>134){
                                                         $tweetstr = mb_substr($tweetstr,0,134,'UTF-8');
                                                 }
-                                                if($row["count(word)"]==0){$point=100;}else{$point = round(100/($row["count(word)"]+1),2);}  
+                                                if($row["count(word)"]==0){$point=100;}else{$point = round(100-($row["count(word)"]),2);}  
                                                 //新たな単語は100ポイントで他のは100/回数+1
                                              //   makepng($result_phase);
 					        //if($result_exec=="0"){
                                               //  upload($tweetstr.$point."pt","./result.png",$reply_to);
                                                 //}else{
                                                 update($tweetstr.$point."pt",$reply_to);
-                                                fwrite($fp,"ツイート送信完了");
+                                                //fwrite($fp,"ツイート送信完了");
                                                 sleep(5);
-                                                exec("nohup php makeimage.php ".$result_phase." &");
-                                                fwrite($fp,"画像作成関数実行");
+                                                exec("nohup php makeimage.php ".$result_phase." ".$user_name." ".$reply_to." &");
+                                                //fwrite($fp,"画像作成関数実行");
 
 
                                         }
@@ -114,15 +118,15 @@ function word_check($user_name,$user_text,$reply_to,$fp){
                                                 //ポイント追加失敗　レコード作成
                                                 $query_addpoint = "insert into point_word value(\"".$user_name."\",".$point.",\"\",\"\")";
                                                 mysql_query($query_addpoint);
-                                                fwrite($fp,"失敗レコード作成");
                                         }else{
                                                 $query_point = "UPDATE point_word SET point = point+".$point." WHERE user =\"".$user_name."\"";
                                                 $result_point = mysql_query($query_point);
-                                                fwrite($fp,"\n".$query_point."\n");
+                                                fwrite($fp," ".$point."ポイント\n");
                                                 //ポイント追加成功
-                                                fwrite($fp,"成功!");               
                                         }
-				}else{fwrite($fp,$result_day."にあらわれているので得点対象外");}
+                }else{
+                //    fwrite($fp,"\n".$result_day."に出現したので得点対象外");
+                }
 				}
               }
 }

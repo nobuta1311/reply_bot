@@ -13,7 +13,7 @@ for($i=1;$i<100;$i++){   //過去100日のどこで出てるか？
 $text .= "\definecolor{color".$i."}{rgb}{ .99, .".sprintf("%02d", $i).", .10}\n";
 }
 $text .= "\definecolor{color100}{rgb}{ .99, 1, .10}\n";
-$text .= "\definecolor{colornew}{rgb}{.10,.30,.70}\n";
+$text .= "\definecolor{colornew}{rgb}{.30,.50,.95}\n";
 $text .= "\begin{document}\n";
 $text .= "\begin{table}
 \scalebox{0.8}[0.9]{
@@ -24,7 +24,6 @@ $text .= "\begin{table}
         for($k=1;$k<=100;$k++){
                 $number++;
                 $query_correct = "select distinct words.phase,words.number,words.meaning,words.word,day from past_words inner join words on past_words.word=words.word and words.number>=4000 and day>".(date("z")-100)." and number=".$number." order by number;";
-                echo $query_correct;
                 if($temp =  mysql_fetch_assoc(mysql_query($query_correct))){   //みつかってたら
                         print_r($temp);
                         $query_new = "select * from past_words where day = ".date("z")." and word = \"".$temp["word"]."\"";
@@ -33,10 +32,19 @@ $text .= "\begin{table}
                                 $text.=$temp["word"]." ";
                         }else
                         {
-                                $text.="\cellcolor{color".(date("z")-$temp["day"]+1)."} ";
+                           // date("z")-$result_day>30 || (date("z")-$result_day<0 && (366-$result_day)+("z")>30)
+                                if(date("z"-$temp["day"]>0))$days=date("z")-$temp["day"];
+                                else $days=366-date("z")+$temp["day"];
+                                if($days<=0)$days=1;
+                                echo "days:".$days;
+                                if($days>70)
+                                    $text.="";
+                                else
+                                    $text.="\cellcolor{color".(1/$days)."} ";
                                 $text.=$temp["word"]." ";
                                 }
                 }else{  //みつかってなければ
+                    echo "sippai";
                 $query_hidden = "select * from words where number=".$number;
                 $result_numword = mysql_fetch_assoc(mysql_query($query_hidden));
                 $hidden = substr($result_numword["word"],0,3);
