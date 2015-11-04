@@ -11,5 +11,5 @@ exec("convert -density 300 result-crop.pdf -quality 90 result.png");
 exec("mv ./result.* ./images");
 $str = $phase."の発見状況";
 $target = "./images/result.png";
-//upload($str,$target);
+upload($str,$target);
 ?>

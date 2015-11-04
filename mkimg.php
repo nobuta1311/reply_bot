@@ -43,8 +43,16 @@ $text .= "\begin{table}
                                 else
                                     $text.="\cellcolor{color".(1/$days)."} ";
                              */
-                            $text.="\cellcolor{color".(date("z")-$temp["day"]+1)."}";
+                            $fromlast=(date("z")-$temp["day"]+1);
+                            $text.="\cellcolor{color".$fromlast."}";
+                            if($fromlast>40){//結構前に見つかってるから隠す
+                                $hidden = substr($temp["word"],0,3);
+                                for($j=0;$j<strlen($temp["word"])-3;$j++){$hidden.="*";}
+                                    $text.=$hidden." ";
+                            }
+                            else{
                                 $text.=$temp["word"]." ";
+                            }
                         }
                 }else{  //みつかってなければ
                     echo "sippai";
