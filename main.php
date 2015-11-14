@@ -70,7 +70,7 @@ function word_check($user_name,$user_text,$reply_to,$fp){
                                 $query_insert = "insert into past_words values(\"".$user_name."\",\"".$result_word."\",".date("z").")";        //過去単語を更新
                                // fwrite($fp,"発見済み単語に記録\n".$query_insert."\n");
 				mysql_query($query_insert);
-				if($result_day==NULL||date("z")-$result_day>30 || (date("z")-$result_day<0 && (366-$result_day)+("z")>30)){	
+				if($result_day==NULL||date("z")-$result_day>30 || (date("z")-$result_day<0 && (366-$result_day)+("z")>40)){	
                                         //過去30日に出現していないならば、得点の対象となる
                     if($result_day==NULL){fwrite($fp," 過去に記録がないので得点の対象 ");}
                     else{
@@ -95,7 +95,7 @@ function word_check($user_name,$user_text,$reply_to,$fp){
                                                 }else if($length>134){
                                                         $tweetstr = mb_substr($tweetstr,0,134,'UTF-8');
                                                 }
-                                                if($row["count(word)"]==0){$point=100;}else{$point = round(100-($row["count(word)"]),2);}  
+                                                if($row["count(word)"]==0){$point=100;}else{$point = 100/($row["count(word)"]);}  
                                                 //新たな単語は100ポイントで他のは100/回数+1
                                              //   makepng($result_phase);
 					        //if($result_exec=="0"){
