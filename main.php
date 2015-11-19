@@ -95,7 +95,7 @@ function word_check($user_name,$user_text,$reply_to,$fp){
                                                 }else if($length>134){
                                                         $tweetstr = mb_substr($tweetstr,0,134,'UTF-8');
                                                 }
-                                                if($row["count(word)"]==0){$point=100;}else{$point = round(100/($row["count(word)"]),3);}  
+                                                if($row["count(word)"]==0){$point=100;}else{$point = round(100/($row["count(word)"]),1);}  
                                                 //新たな単語は100ポイントで他のは100/回数+1
                                              //   makepng($result_phase);
 					        //if($result_exec=="0"){
