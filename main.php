@@ -77,7 +77,7 @@ function word_check($user_name,$user_text,$reply_to,$fp){
                         fwrite($fp,"  ".$result_day."日前に反応したので得点の対象 ");
                     }
                     fwrite($fp,"\n".$user_text);
-                                        if($num<4000){  //a単語ならば10点満点
+                                        if($num<=4000){  //a単語ならば10点満点
                                                 fwrite($fp,"\na単語");
                                                 if($row["count(word)"]==0){$point=10;}else{$point = round(10/($row["count(word)"]+1),2);}  
                                                 //新たな単語は10ポイントで他のは10/回数+1
