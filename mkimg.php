@@ -14,6 +14,7 @@ $text .= "\definecolor{color".$i."}{rgb}{ .99, .".sprintf("%02d", $i).", .10}\n"
 }
 $text .= "\definecolor{color100}{rgb}{ .99, 1, .10}\n";
 $text .= "\definecolor{colornew}{rgb}{.30,.50,.95}\n";
+$text .= "\definecolor{colorwhite}{rgb}{1,1,1}\n";
 $text .= "\begin{document}\n";
 $text .= "\begin{table}
 \scalebox{0.8}[0.9]{
@@ -59,6 +60,7 @@ $text .= "\begin{table}
                 $query_hidden = "select * from words where number=".$number;
                 $result_numword = mysql_fetch_assoc(mysql_query($query_hidden));
                 $hidden = substr($result_numword["word"],0,3);
+                $text.="\cellcolor{white}";
                 for($j=0;$j<strlen($result_numword["word"])-3;$j++){$hidden.="*";}
                 $text.=$hidden." ";
                 }
